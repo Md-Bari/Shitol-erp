@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: shitol_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shitol_erp
+      MYSQL_USER: shitol_user
+      MYSQL_PASSWORD: shitol_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: shitol_app
+    working_dir: /app
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: shitol_erp
+      DB_USERNAME: shitol_user
+      DB_PASSWORD: shitol_pass
+      APP_KEY: base64:1ogk4R61YH+SpKCRmVO83pAPjHSBjZQpXBEYfncvuaU=
+      APP_ENV: local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "php artisan migrate:fresh --seed && 
+             php artisan serve --host=0.0.0.0 --port=8000"
+
+  frontend:
+    image: node:20-alpine
+    container_name: shitol_frontend
+    working_dir: /app
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    command: npm run dev
+
+volumes:
+  mysql_data:

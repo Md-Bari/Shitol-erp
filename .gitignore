@@ -10,6 +10,7 @@ dist/
 .vite/
 
 # Backend
+backend/
 backend/vendor/
 backend/.env
 backend/.env.local

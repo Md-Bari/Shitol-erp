@@ -36,6 +36,25 @@ Backend runs on `http://127.0.0.1:8000` by default.
 
 Frontend runs on `http://127.0.0.1:5173` and proxies `/api` requests to `http://127.0.0.1:8000`.
 
+## Vercel Deployment
+
+This repository is configured for separate Vercel projects:
+
+- `frontend/` deploys as a static Vite app using `frontend/vercel.json`
+- `backend/` deploys as a PHP app using `backend/vercel.json`
+
+Deploy each project separately from the monorepo root with Vercel CLI, for example:
+
+```bash
+cd frontend
+vercel --prod
+
+cd ../backend
+vercel --prod
+```
+
+> Make sure each project is configured in Vercel with the correct root path before deployment.
+
 ## Implemented API Modules
 
 - Auth: login, me, logout

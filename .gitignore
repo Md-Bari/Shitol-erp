@@ -10,12 +10,15 @@ dist/
 .vite/
 
 # Backend
-backend/
 backend/vendor/
 backend/.env
 backend/.env.local
 backend/storage/logs/*
-backend/bootstrap/cache/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+backend/database/*.sqlite
 backend/.DS_Store
 
 # Frontend

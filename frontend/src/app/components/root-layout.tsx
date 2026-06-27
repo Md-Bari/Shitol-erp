@@ -14,6 +14,8 @@ import {
   TrendingUp,
   ClipboardList,
   UserCog,
+  ChevronDown,
+  User,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -299,30 +301,41 @@ export function RootLayout() {
             {/* User Profile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
+                <Button variant="ghost" className="flex h-10 items-center gap-2 px-2" aria-label="Open account menu">
                   <Avatar className="size-8">
                     <AvatarFallback>{user ? getInitials(user.name) : 'U'}</AvatarFallback>
                   </Avatar>
-                  <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <div className="hidden max-w-32 text-left md:block">
+                    <p className="truncate text-sm font-medium">{user?.name || 'User'}</p>
                     <p className="text-xs text-gray-500 capitalize">{user?.role || 'Role'}</p>
                   </div>
+                  <ChevronDown className="hidden size-4 text-gray-500 md:block" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" sideOffset={8} className="z-[100] w-52">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{user?.name}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="break-all text-xs text-gray-500">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="size-4 mr-2" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
                   <Settings className="size-4 mr-2" />
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    void handleLogout();
+                  }}
+                  className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
+                >
                   <LogOut className="size-4 mr-2" />
                   Logout
                 </DropdownMenuItem>

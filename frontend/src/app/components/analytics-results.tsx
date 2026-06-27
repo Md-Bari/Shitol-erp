@@ -28,6 +28,7 @@ import {
   ZAxis,
 } from 'recharts';
 import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
 
 const performanceMetrics = [
   { metric: 'Production', value: 92, fullMark: 100 },
@@ -127,7 +128,184 @@ export function AnalyticsResults() {
   ];
 
   const handleExport = () => {
-    toast.success('Analysis report exported successfully!');
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    const generatedAt = new Date().toLocaleString();
+    let y = 18;
+
+    const addFooter = () => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(107, 114, 128);
+      doc.text('Shitol ERP | AI Analytics Report', margin, pageHeight - 10);
+      doc.text(`Page ${doc.getNumberOfPages()}`, pageWidth - margin, pageHeight - 10, {
+        align: 'right',
+      });
+    };
+
+    const ensureSpace = (requiredHeight: number) => {
+      if (y + requiredHeight <= pageHeight - 18) {
+        return;
+      }
+
+      addFooter();
+      doc.addPage();
+      y = 18;
+    };
+
+    const sectionTitle = (title: string) => {
+      ensureSpace(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(31, 41, 55);
+      doc.text(title, margin, y);
+      y += 7;
+      doc.setDrawColor(79, 70, 229);
+      doc.setLineWidth(0.6);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 7;
+    };
+
+    doc.setFillColor(49, 46, 129);
+    doc.rect(0, 0, pageWidth, 48, 'F');
+    doc.setFillColor(99, 102, 241);
+    doc.circle(pageWidth - 24, 12, 24, 'F');
+    doc.setFillColor(16, 185, 129);
+    doc.circle(pageWidth - 8, 42, 18, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(255, 255, 255);
+    doc.text('AI Analysis Report', margin, 20);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('RMG production intelligence, forecast risk, and action plan', margin, 29);
+    doc.text(`Generated: ${generatedAt}`, margin, 37);
+    y = 60;
+
+    doc.setFillColor(245, 243, 255);
+    doc.setDrawColor(221, 214, 254);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 28, 3, 3, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(76, 29, 149);
+    doc.text('Executive Summary', margin + 5, y + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+    doc.text(
+      doc.splitTextToSize(
+        'The AI model analyzed 6 months of RMG production data across production, quality, efficiency, and market trends. The model reports 94% prediction accuracy and produced 24 operational insights.',
+        pageWidth - margin * 2 - 10
+      ),
+      margin + 5,
+      y + 15
+    );
+    y += 40;
+
+    const kpis = [
+      ['Data Points', '150K+', [124, 58, 237]],
+      ['Prediction Accuracy', '94%', [22, 163, 74]],
+      ['Insights Generated', '24', [37, 99, 235]],
+    ] as const;
+
+    const cardWidth = (pageWidth - margin * 2 - 8) / 3;
+    kpis.forEach(([label, value, color], index) => {
+      const x = margin + index * (cardWidth + 4);
+      doc.setFillColor(249, 250, 251);
+      doc.setDrawColor(229, 231, 235);
+      doc.roundedRect(x, y, cardWidth, 25, 3, 3, 'FD');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(107, 114, 128);
+      doc.text(label, x + 5, y + 8);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(17);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.text(value, x + 5, y + 19);
+    });
+    y += 38;
+
+    sectionTitle('Predictions & Forecasts');
+    predictions.forEach((item) => {
+      ensureSpace(24);
+      const isWarning = item.trend === 'warning';
+      doc.setFillColor(isWarning ? 254 : 240, isWarning ? 252 : 253, isWarning ? 232 : 244);
+      doc.setDrawColor(isWarning ? 234 : 196, isWarning ? 179 : 181, isWarning ? 8 : 253);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 21, 3, 3, 'FD');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(17, 24, 39);
+      doc.text(item.title, margin + 5, y + 7);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(75, 85, 99);
+      doc.text(item.prediction, margin + 5, y + 13);
+      doc.setFillColor(229, 231, 235);
+      doc.roundedRect(pageWidth - margin - 50, y + 8, 30, 3, 1.5, 1.5, 'F');
+      doc.setFillColor(isWarning ? 245 : 34, isWarning ? 158 : 197, isWarning ? 11 : 94);
+      doc.roundedRect(pageWidth - margin - 50, y + 8, 30 * (item.confidence / 100), 3, 1.5, 1.5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(31, 41, 55);
+      doc.text(`${item.confidence}%`, pageWidth - margin - 14, y + 11);
+      y += 26;
+    });
+
+    sectionTitle('Performance Metrics');
+    performanceMetrics.forEach((item) => {
+      ensureSpace(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(55, 65, 81);
+      doc.text(item.metric, margin, y + 3);
+      doc.setFillColor(229, 231, 235);
+      doc.roundedRect(margin + 55, y, 86, 4, 2, 2, 'F');
+      doc.setFillColor(59, 130, 246);
+      doc.roundedRect(margin + 55, y, 86 * (item.value / 100), 4, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${item.value}%`, pageWidth - margin, y + 3, { align: 'right' });
+      y += 9;
+    });
+    y += 6;
+
+    sectionTitle('AI-Powered Recommendations');
+    recommendations.forEach((item) => {
+      const rowHeight = 25;
+      ensureSpace(rowHeight + 4);
+      const priorityColor =
+        item.priority === 'high'
+          ? [239, 68, 68]
+          : item.priority === 'medium'
+          ? [245, 158, 11]
+          : [59, 130, 246];
+
+      doc.setDrawColor(229, 231, 235);
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, rowHeight, 3, 3, 'FD');
+      doc.setFillColor(priorityColor[0], priorityColor[1], priorityColor[2]);
+      doc.roundedRect(margin + 5, y + 5, 22, 7, 2, 2, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(255, 255, 255);
+      doc.text(item.priority.toUpperCase(), margin + 16, y + 10, { align: 'center' });
+      doc.setFontSize(10);
+      doc.setTextColor(17, 24, 39);
+      doc.text(item.title, margin + 32, y + 8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(75, 85, 99);
+      doc.text(doc.splitTextToSize(item.description, 102), margin + 32, y + 14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(22, 163, 74);
+      doc.text(item.impact, pageWidth - margin - 5, y + 10, { align: 'right' });
+      y += rowHeight + 5;
+    });
+
+    addFooter();
+    doc.save(`ai-analysis-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success('PDF report downloaded.');
   };
 
   const handleShare = () => {
